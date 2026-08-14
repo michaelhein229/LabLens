@@ -1,5 +1,5 @@
 # Current Milestone
-Milestone 2 — Drive Connected
+Milestone 3 — Lab Data Extracted
 
 # Completed
 - Project roadmap defined
@@ -31,16 +31,30 @@ Milestone 2 — Drive Connected
 - Added MIME-type routing for Google Slides, Google Docs, PDFs, folders, and unsupported files
 - Added Drive API pagination support for folder listing
 - Added deterministic pagination tests with a fake Drive service
+- Defined and validated slide-level records with source metadata
+- Implemented pure extraction of text runs from Google Slides page structures
+- Implemented Slides API extraction through `presentations().get(...)`
+- Verified extraction against a real Google Slides presentation
+- Added deterministic Google Slides extraction tests using fake API responses
+- Added text normalization that preserves scientific capitalization, punctuation, identifiers, units, and meaningful newlines
+- Added stable internal slide chunk IDs based on file ID and slide ID
+- Added exact-slide citation URL construction with safe URL-fragment replacement
+- Defined a replaceable `EmbeddingProvider` protocol
+- Implemented a Sentence Transformer embedding adapter with batch document embedding and query embedding
+- Added deterministic embedding-provider tests using a fake model
+- Reached a verified baseline of 55 passing tests
 
 # Current Work
-- Begin Milestone 3 by extracting slide-level text and source metadata from Google Slides
+- Complete the in-memory slide indexing pipeline that pairs normalized slide text with embeddings, stable IDs, and source citations
+- Correct the remaining slide-index import, whitespace filtering, source-field mapping, citation-helper call, and aware-datetime validation issues
+- Add deterministic tests for the complete slide-to-index transformation
 
 # Next
-- Define a `SlideTextRecord` model for extracted slide content
-- Implement a pure helper that extracts text runs from a Slides API page structure
-- Implement a Google Slides extractor that calls `presentations().get(...)`
-- Preserve presentation title, file ID, slide number, slide ID, raw text, modified time, and source URL
-- Add deterministic unit tests using fake Slides API responses
+- Verify that vector counts always match prepared slide records before pairing them
+- Confirm empty and image-only slides are excluded from the embedding batch
+- Run extracted Slides through the in-memory indexing pipeline with the local Sentence Transformer provider
+- Add in-memory cosine-similarity retrieval over indexed slide chunks
+- Evaluate whether slide-only retrieval needs adjacent-slide context expansion
 - Keep the initial extraction/indexing MVP text-only; defer image counting, OCR, vision descriptions, and multimodal embeddings until slide text retrieval works end to end
 
 # Decisions
@@ -52,6 +66,12 @@ Milestone 2 — Drive Connected
 - Keep shared data models in `lablens.models` so ingestion and extraction can use the same validated types
 - Return `"unsupported"` for unknown MIME types instead of raising during discovery
 - Treat folder recursion as a later extension; current folder listing supports paginated direct children
+- Treat one Google slide as one retrieval chunk for the initial MVP
+- Preserve raw extracted text and use normalized text for embedding and retrieval
+- Use stable slide chunk IDs based on file ID and slide ID; do not include mutable slide numbers
+- Construct exact-slide citation URLs from trusted source metadata rather than asking an LLM to invent them
+- Keep embedding providers replaceable behind a shared document/query embedding contract
+- Keep format-specific index adapters for Slides, Docs, and PDFs while emitting a shared indexed representation
 - Defer experiment photo understanding for now: future OCR may extract visible labels/text, and future vision models may create derived image descriptions, but those outputs must remain source-linked and clearly labeled as derived rather than original lab observations
 - Generate document embeddings during indexing and persist them locally across runs
 - Embed only the new question during normal query execution

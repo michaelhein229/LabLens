@@ -25,9 +25,9 @@ The purpose of this project is also educational. I want to **learn how RAG and a
 
 # Current Implementation Snapshot
 
-Updated 2026-08-13.
+Updated 2026-08-14.
 
-LabLens is transitioning from Milestone 2, Drive Connected, into Milestone 3, Lab Data Extracted.
+LabLens is in Milestone 3, Lab Data Extracted. Google Slides extraction is working, and the current focus is connecting normalized slide records to embeddings and citation metadata in an in-memory index.
 
 Current working code can:
 
@@ -37,29 +37,36 @@ Current working code can:
 * List paginated direct children of that Drive folder.
 * Normalize raw Drive API file dictionaries into a shared Pydantic `DriveFileMetadata` model.
 * Route normalized Drive files by MIME type for Google Slides, Google Docs, PDFs, folders, and unsupported files.
+* Extract one validated `SlideTextRecord` per Google slide using the Slides API.
+* Preserve raw slide text, presentation and slide identity, modification time, and source URL.
+* Normalize whitespace without rewriting scientific capitalization, punctuation, units, or identifiers.
+* Build stable slide chunk IDs and exact-slide citation URLs.
+* Embed document batches and queries through a replaceable provider interface with a Sentence Transformer implementation.
 
 Current test status:
 
 ```text
-26 passing tests
+55 passing tests
 ```
 
 Important current files:
 
 ```text
-src/lablens/models/models.py              Shared Pydantic models
-src/lablens/ingestion/google_drive.py     Drive folder listing and metadata normalization
-src/lablens/ingestion/google_auth.py      Google OAuth/service setup
-src/lablens/extraction/router.py          MIME-type routing
-src/lablens/extraction/google_slides.py   Next extractor target
-tests/ingestion/test_google_drive.py      Drive normalization and pagination tests
-tests/extraction/test_router.py           MIME router tests
+src/lablens/models/models.py                  Shared source models
+src/lablens/ingestion/google_drive.py         Drive listing and metadata normalization
+src/lablens/ingestion/google_auth.py          Google OAuth/service setup
+src/lablens/extraction/google_slides.py       Slide-level text extraction
+src/lablens/extraction/text_normalization.py  Scientific-text-safe normalization
+src/lablens/indexing/slide_metadata.py        Stable IDs and exact-slide citations
+src/lablens/indexing/embeddings.py            Replaceable embedding-provider boundary
+src/lablens/indexing/slides.py                In-progress slide index assembly
+tests/indexing/                                Index metadata and embedding adapter tests
 ```
 
 Current next task:
 
 ```text
-Extract slide-level text records from Google Slides API presentation data.
+Complete and test the in-memory transformation from `SlideTextRecord` objects to embedded, source-linked `IndexedChunk` objects.
 ```
 
 MVP scope note:
@@ -68,7 +75,7 @@ MVP scope note:
 Keep extraction and indexing text-only for now. Experiment photos, OCR, vision descriptions, and multimodal embeddings are deferred until slide text can be extracted, chunked, embedded, and retrieved end to end.
 ```
 
-Do not start embeddings, vector storage, agents, or desktop UI until at least one Google Slides presentation can be extracted into structured slide-level records with source metadata.
+Do not start persistent vector storage, agents, or desktop UI until extracted slide records can be normalized, embedded, retrieved, and cited correctly in memory.
 
 ---
 

@@ -18,3 +18,12 @@ class SlideTextRecord(BaseModel):
     text: str
     modified_time: AwareDatetime
     source_url: str
+
+# class DocumentChunk(BaseModel):
+#     chunk_id: str
+#     file_id: str
+#     source_type: str
+#     source_title: str
+#     source_position: int
+#     source_element_id: str
+#     raw_text: str
