@@ -62,6 +62,12 @@ Current next task:
 Extract slide-level text records from Google Slides API presentation data.
 ```
 
+MVP scope note:
+
+```text
+Keep extraction and indexing text-only for now. Experiment photos, OCR, vision descriptions, and multimodal embeddings are deferred until slide text can be extracted, chunked, embedded, and retrieved end to end.
+```
+
 Do not start embeddings, vector storage, agents, or desktop UI until at least one Google Slides presentation can be extracted into structured slide-level records with source metadata.
 
 ---
@@ -410,6 +416,8 @@ Teach how the Slides API represents:
 * text runs
 
 Later investigate tables, charts, images, and speaker notes.
+
+For the initial MVP, image-heavy experiment slides should remain text-only unless visible text is already available through normal slide text extraction. Do not add OCR, AI-generated image descriptions, or multimodal image embeddings yet. Future visual processing should preserve the original slide/image source and label OCR or vision output as derived data, especially for scientific observations such as microparticle morphology.
 
 ---
 
@@ -1178,6 +1186,7 @@ Consider:
 * encrypted secrets
 * access controls
 * avoiding logging sensitive document contents
+* labeling future OCR or vision-derived image descriptions separately from original lab notes
 
 Before using real lab data, confirm that the researcher is allowed to process the data using the selected external APIs.
 
@@ -1495,6 +1504,8 @@ The command-line MVP comes first. A desktop UI is a delivery milestone after
 this pipeline is reliable, not a prerequisite for proving retrieval quality.
 
 Everything after this should be treated as an improvement that solves an identified limitation.
+
+Image understanding is outside the first MVP boundary. The initial retrieval corpus should come from extracted text. Later extensions may add image presence metadata, OCR for visible labels or instrument readouts, AI-generated image descriptions, or multimodal embeddings, but those should be evaluated separately and never merged into original source text without provenance.
 
 ---
 

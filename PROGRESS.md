@@ -41,6 +41,7 @@ Milestone 2 — Drive Connected
 - Implement a Google Slides extractor that calls `presentations().get(...)`
 - Preserve presentation title, file ID, slide number, slide ID, raw text, modified time, and source URL
 - Add deterministic unit tests using fake Slides API responses
+- Keep the initial extraction/indexing MVP text-only; defer image counting, OCR, vision descriptions, and multimodal embeddings until slide text retrieval works end to end
 
 # Decisions
 - Start with plain Python before RAG frameworks
@@ -51,6 +52,7 @@ Milestone 2 — Drive Connected
 - Keep shared data models in `lablens.models` so ingestion and extraction can use the same validated types
 - Return `"unsupported"` for unknown MIME types instead of raising during discovery
 - Treat folder recursion as a later extension; current folder listing supports paginated direct children
+- Defer experiment photo understanding for now: future OCR may extract visible labels/text, and future vision models may create derived image descriptions, but those outputs must remain source-linked and clearly labeled as derived rather than original lab observations
 - Generate document embeddings during indexing and persist them locally across runs
 - Embed only the new question during normal query execution
 - Re-index new or changed files by comparing Drive metadata with local index state
