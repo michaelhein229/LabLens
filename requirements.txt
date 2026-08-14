@@ -11,4 +11,4 @@ sentence-transformers>=5.6,<6
 pytest>=9.1,<10
 
 # Models
-pydantic=2, <3
+pydantic>=2,<3

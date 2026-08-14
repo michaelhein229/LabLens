@@ -23,6 +23,49 @@ The purpose of this project is also educational. I want to **learn how RAG and a
 
 ---
 
+# Current Implementation Snapshot
+
+Updated 2026-08-13.
+
+LabLens is transitioning from Milestone 2, Drive Connected, into Milestone 3, Lab Data Extracted.
+
+Current working code can:
+
+* Run the RAG fundamentals warmup with synthetic documents, paragraph chunks, Sentence Transformer embeddings, cosine similarity, and deterministic retrieval tests.
+* Authenticate with Google Drive using local OAuth credentials and a local token outside Git.
+* Read a configured Drive folder ID from local environment configuration.
+* List paginated direct children of that Drive folder.
+* Normalize raw Drive API file dictionaries into a shared Pydantic `DriveFileMetadata` model.
+* Route normalized Drive files by MIME type for Google Slides, Google Docs, PDFs, folders, and unsupported files.
+
+Current test status:
+
+```text
+26 passing tests
+```
+
+Important current files:
+
+```text
+src/lablens/models/models.py              Shared Pydantic models
+src/lablens/ingestion/google_drive.py     Drive folder listing and metadata normalization
+src/lablens/ingestion/google_auth.py      Google OAuth/service setup
+src/lablens/extraction/router.py          MIME-type routing
+src/lablens/extraction/google_slides.py   Next extractor target
+tests/ingestion/test_google_drive.py      Drive normalization and pagination tests
+tests/extraction/test_router.py           MIME router tests
+```
+
+Current next task:
+
+```text
+Extract slide-level text records from Google Slides API presentation data.
+```
+
+Do not start embeddings, vector storage, agents, or desktop UI until at least one Google Slides presentation can be extracted into structured slide-level records with source metadata.
+
+---
+
 # Important Teaching Instructions
 
 Do not build the entire project for me.

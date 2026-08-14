@@ -23,15 +23,24 @@ Milestone 2 — Drive Connected
 - Queried the direct children of the configured Drive folder
 - Confirmed folder-scoped Drive discovery with the test Slides and Docs files
 - Created initial extraction module placeholders for Slides, Docs, PDFs, and routing
+- Moved shared Pydantic models into `src/lablens/models`
+- Fixed the Pydantic requirement specifier in `requirements.txt`
+- Added `pytest.ini` so tests can import the `src` package layout consistently
+- Converted raw Google Drive file responses into validated `DriveFileMetadata`
+- Added tests for Drive metadata normalization, timestamp parsing, timezone awareness, and invalid metadata rejection
+- Added MIME-type routing for Google Slides, Google Docs, PDFs, folders, and unsupported files
+- Added Drive API pagination support for folder listing
+- Added deterministic pagination tests with a fake Drive service
 
 # Current Work
-- Convert raw Google Drive file responses into standardized LabLens metadata
+- Begin Milestone 3 by extracting slide-level text and source metadata from Google Slides
 
 # Next
-- Add MIME-type routing for Slides, Docs, PDFs, and folders
-- Add Drive API pagination
-- Add deterministic tests for folder listing with a fake Drive service
-- Extract slide-level text and source metadata from Google Slides
+- Define a `SlideTextRecord` model for extracted slide content
+- Implement a pure helper that extracts text runs from a Slides API page structure
+- Implement a Google Slides extractor that calls `presentations().get(...)`
+- Preserve presentation title, file ID, slide number, slide ID, raw text, modified time, and source URL
+- Add deterministic unit tests using fake Slides API responses
 
 # Decisions
 - Start with plain Python before RAG frameworks
@@ -39,6 +48,9 @@ Milestone 2 — Drive Connected
 - Keep OAuth client credentials and per-user tokens outside Git
 - Configure the source folder by ID so each user can connect a different Drive folder
 - Use separate extractors for Slides, Docs, and PDFs that emit a common chunk structure
+- Keep shared data models in `lablens.models` so ingestion and extraction can use the same validated types
+- Return `"unsupported"` for unknown MIME types instead of raising during discovery
+- Treat folder recursion as a later extension; current folder listing supports paginated direct children
 - Generate document embeddings during indexing and persist them locally across runs
 - Embed only the new question during normal query execution
 - Re-index new or changed files by comparing Drive metadata with local index state

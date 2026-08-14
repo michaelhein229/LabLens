@@ -1,14 +1,4 @@
-from pydantic import AwareDatetime, BaseModel
-
-
-class DriveFileMetadata(BaseModel):
-    file_id: str
-    file_name: str
-    mime_type: str
-    created_time: AwareDatetime
-    modified_time: AwareDatetime
-    web_url: str
-    folder_id: str
+from lablens.models import DriveFileMetadata
 
 
 def list_folder_files(
@@ -17,14 +7,23 @@ def list_folder_files(
 ) -> list[DriveFileMetadata]:
     """Return metadata for direct children of a Drive folder."""
     query = f"'{folder_id}' in parents and trashed = false"
-    request = service.files().list(
-        q=query,
-        pageSize=100,
-        fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, webViewLink)",
-    )
-    response = request.execute()
+    page_token = None
+    all_files = []
+    while True:
+        request = service.files().list(
+            q=query,
+            pageSize=100,
+            fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, webViewLink)",
+            pageToken = page_token
+        )
+        response = request.execute()
+        all_files.extend(response.get("files", []))
 
-    return [normalize_drive_file(file, folder_id) for file in response.get("files", [])]
+        page_token = response.get("nextPageToken")
+        if page_token is None:
+            break
+
+    return [normalize_drive_file(file, folder_id) for file in all_files]
 
 def normalize_drive_file(
     raw_file: dict,

@@ -108,3 +108,43 @@ def test_list_folder_files_returns_empty_list():
     results = list_folder_files(service, "folder-456")
 
     assert results == []
+
+
+def test_list_folder_files_combines_multiple_pages():
+    service = MagicMock()
+    request = service.files.return_value.list.return_value
+
+    request.execute.side_effect = [
+        {
+            "files": [
+                {
+                    "id": "file-1",
+                    "name": "First",
+                    "mimeType": "application/vnd.google-apps.presentation",
+                    "createdTime": "2024-06-01T12:00:00Z",
+                    "modifiedTime": "2024-06-02T12:00:00Z",
+                    "webViewLink": "https://example.test/file-1",
+                }
+            ],
+            "nextPageToken": "page-2",
+        },
+        {
+            "files": [
+                {
+                    "id": "file-2",
+                    "name": "Second",
+                    "mimeType": "application/pdf",
+                    "createdTime": "2024-06-03T12:00:00Z",
+                    "modifiedTime": "2024-06-04T12:00:00Z",
+                    "webViewLink": "https://example.test/file-2",
+                }
+            ]
+        },
+    ]
+
+    results = list_folder_files(service, "folder-456")
+
+    assert len(results) == 2
+    assert results[0].file_id == "file-1"
+    assert results[1].file_id == "file-2"
+
