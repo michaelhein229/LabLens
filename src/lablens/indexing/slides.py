@@ -3,6 +3,7 @@ from lablens.models import SlideTextRecord
 from lablens.indexing.models import IndexedChunk
 from lablens.extraction.text_normalization import normalize_text
 from lablens.indexing.slide_metadata import build_slide_chunk_id, build_slide_citation_url
+from lablens.indexing.embeddings import EmbeddingProvider
 
 
 def index_slide_record(
@@ -25,8 +26,9 @@ def index_slide_record(
 
     prepared_records = []
     for slide in records:
-        if slide.text:
-            prepared_records.append((slide, normalize_text(slide.text)))
+        normalized = normalize_text(slide.text)
+        if normalized:
+            prepared_records.append((slide, normalized))
 
     if not prepared_records:
         return []
@@ -51,7 +53,7 @@ def index_slide_record(
             vector=embedded_texts[i],
             modified_time=slide.modified_time,
             source_url=slide.source_url,
-            citation_url=build_slide_citation_url(slide.source_url)
+            citation_url=build_slide_citation_url(slide)
         )
         indexed_chunks.append(chunk)
     return indexed_chunks

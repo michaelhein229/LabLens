@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 class IndexedChunk(BaseModel):
     chunk_id: str
@@ -10,6 +11,6 @@ class IndexedChunk(BaseModel):
     raw_text: str
     text: str
     vector: list[float]
-    modified_time: str
+    modified_time: datetime
     source_url: str
     citation_url: str
