@@ -25,9 +25,9 @@ The purpose of this project is also educational. I want to **learn how RAG and a
 
 # Current Implementation Snapshot
 
-Updated 2026-08-14.
+Updated 2026-08-18.
 
-LabLens is in Milestone 3, Lab Data Extracted. Google Slides extraction is working, and the current focus is connecting normalized slide records to embeddings and citation metadata in an in-memory index.
+LabLens is entering Milestone 4, Semantic Search. Google Slides extraction, slide indexing, in-memory semantic retrieval, and a first CLI search path are working. The current focus is broadening search from one presentation to all Google Slides presentations in the configured Drive folder, then adding persistent vector storage.
 
 Current working code can:
 
@@ -42,11 +42,16 @@ Current working code can:
 * Normalize whitespace without rewriting scientific capitalization, punctuation, units, or identifiers.
 * Build stable slide chunk IDs and exact-slide citation URLs.
 * Embed document batches and queries through a replaceable provider interface with a Sentence Transformer implementation.
+* Transform `SlideTextRecord` objects into embedded, source-linked `IndexedChunk` objects.
+* Run exact in-memory K-nearest-neighbor retrieval using cosine similarity.
+* Return ranked `SearchResult` objects that preserve chunk text, score, source metadata, and citation URLs.
+* Query a Google Slides presentation from the command line through `scripts/search_slides.py`.
+* Use a synthetic native Google Slides test deck to verify expected semantic retrieval behavior without private lab data.
 
 Current test status:
 
 ```text
-55 passing tests
+75 passing tests
 ```
 
 Important current files:
@@ -59,23 +64,27 @@ src/lablens/extraction/google_slides.py       Slide-level text extraction
 src/lablens/extraction/text_normalization.py  Scientific-text-safe normalization
 src/lablens/indexing/slide_metadata.py        Stable IDs and exact-slide citations
 src/lablens/indexing/embeddings.py            Replaceable embedding-provider boundary
-src/lablens/indexing/slides.py                In-progress slide index assembly
-tests/indexing/                                Index metadata and embedding adapter tests
+src/lablens/indexing/slides.py                Slide record to indexed chunk assembly
+src/lablens/retrieval/models.py               Retrieval result models
+src/lablens/retrieval/slides.py               In-memory slide retrieval and cosine similarity
+scripts/search_slides.py                      CLI semantic search demo
+tests/indexing/                               Index metadata and embedding adapter tests
+tests/retrieval/                              Retrieval ranking and citation tests
 ```
 
 Current next task:
 
 ```text
-Complete and test the in-memory transformation from `SlideTextRecord` objects to embedded, source-linked `IndexedChunk` objects.
+Search all Google Slides presentations in the configured Drive folder, then introduce a Chroma-backed persistent vector index so normal queries do not re-embed every slide.
 ```
 
 MVP scope note:
 
 ```text
-Keep extraction and indexing text-only for now. Experiment photos, OCR, vision descriptions, and multimodal embeddings are deferred until slide text can be extracted, chunked, embedded, and retrieved end to end.
+Keep extraction and retrieval text-only for now. Experiment photos, OCR, vision descriptions, and multimodal embeddings are deferred until slide text can be extracted, chunked, embedded, retrieved, persisted, and used for grounded answers end to end.
 ```
 
-Do not start persistent vector storage, agents, or desktop UI until extracted slide records can be normalized, embedded, retrieved, and cited correctly in memory.
+Do not start agents or desktop UI until extracted slide records can be normalized, embedded, retrieved, cited, and persisted from the command line. LLM answer generation should be added as a grounded summarization layer after retrieval quality is visible and debuggable, not as an agent first.
 
 ---
 
@@ -543,6 +552,8 @@ Start with a simple local vector store such as:
 
 * Chroma
 * FAISS
+
+Current direction: use Chroma first. It provides a local persistent client and stores vectors, text documents, and metadata together, which makes it a good fit for the first LabLens disk-backed index. Continue creating embeddings through LabLens' own `EmbeddingProvider` interface, then pass explicit vectors into Chroma instead of letting the database hide the embedding step.
 
 The initial index should persist to local disk. Document embeddings are created
 during indexing and must survive application restarts; they should not be
@@ -1169,8 +1180,8 @@ The first desktop experience should eventually show:
 
 Synchronization should run outside the UI thread. During a sync, queries may
 continue using the last complete index. Do not begin GUI implementation until a
-command-line vertical slice can ingest, persist, retrieve, and cite at least one
-Google Slides presentation.
+command-line vertical slice can ingest, persist, retrieve, cite, and generate a
+grounded answer over at least one Google Slides presentation.
 
 ---
 

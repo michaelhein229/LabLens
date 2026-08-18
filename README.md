@@ -4,7 +4,7 @@ LabLens is an educational, source-grounded RAG research assistant for laboratory
 
 ## Current status
 
-LabLens is in Milestone 3: Lab Data Extracted.
+LabLens is entering Milestone 4: Semantic Search.
 
 Working features include:
 
@@ -16,9 +16,13 @@ Working features include:
 - Text normalization that preserves scientific capitalization, punctuation, identifiers, and units
 - Stable slide chunk IDs and direct links to exact slides
 - A replaceable embedding-provider contract and Sentence Transformer adapter
+- In-memory transformation from `SlideTextRecord` objects to embedded `IndexedChunk` objects
+- In-memory cosine-similarity retrieval over indexed slide chunks
+- A CLI semantic search script for querying extracted Google Slides and printing cited results
+- A synthetic native Google Slides test deck for checking expected retrieval behavior
 - Deterministic unit tests using fake Drive, Slides, and embedding-model responses
 
-The slide-to-index assembly pipeline is currently under development. It will connect normalized slide records to vectors and citation metadata in memory before persistent vector storage is introduced.
+The first end-to-end semantic search path works in memory. The current direction is to search all Google Slides presentations in the configured Drive folder, then add persistent vector storage so slide embeddings do not need to be regenerated for every query.
 
 ## Current pipeline
 
@@ -37,7 +41,13 @@ Stable chunk ID + exact slide citation
     ↓
 Embedding provider
     ↓
-IndexedChunk (in progress)
+IndexedChunk
+    â†“
+Query embedding
+    â†“
+In-memory cosine retrieval
+    â†“
+Ranked cited slide results
 ```
 
 The original extracted text remains unchanged. Normalized text is used for embeddings and retrieval, while raw text and source metadata remain available for provenance and debugging.
@@ -72,8 +82,18 @@ PYTHONPATH=src .venv/bin/python -m pytest -q
 Current verified baseline:
 
 ```text
-55 passing tests
+75 passing tests
 ```
+
+## CLI search
+
+Run semantic search from the project root with the `src` package path enabled:
+
+```powershell
+$env:PYTHONPATH="src"; .venv\Scripts\python.exe scripts\search_slides.py "high burst release"
+```
+
+The current CLI loads the configured Drive folder, extracts a Google Slides presentation, embeds slide text with `all-MiniLM-L6-v2`, searches with cosine similarity, and prints ranked slide results with citation URLs. It is still an in-memory demo: the index is rebuilt each run.
 
 ## Project structure
 
@@ -82,6 +102,7 @@ src/lablens/ingestion/     Google authentication and Drive discovery
 src/lablens/extraction/    Slides, Docs, PDF extraction, routing, normalization
 src/lablens/indexing/      Chunk metadata, embedding providers, index assembly
 src/lablens/models/        Shared validated source models
+src/lablens/retrieval/     Similarity search and retrieval result models
 scripts/                   Local learning and integration scripts
 tests/                     Deterministic unit tests
 ```
@@ -92,5 +113,5 @@ See `PROJECT.md` for the full learning roadmap and architecture, and `PROGRESS.m
 
 - Keep the initial pipeline text-only.
 - Treat one Google slide as one chunk until evaluation shows a need for splitting or neighbor expansion.
-- Do not add OCR, vision descriptions, multimodal embeddings, agents, or desktop UI before grounded text retrieval works end to end.
+- Do not add OCR, vision descriptions, multimodal embeddings, agents, or desktop UI before text retrieval, persistent indexing, and grounded answers work end to end.
 - Never commit OAuth credentials, tokens, `.env`, or private laboratory content.

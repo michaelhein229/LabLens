@@ -1,5 +1,5 @@
 # Current Milestone
-Milestone 3 — Lab Data Extracted
+Milestone 4 - Semantic Search
 
 # Completed
 - Project roadmap defined
@@ -42,20 +42,30 @@ Milestone 3 — Lab Data Extracted
 - Defined a replaceable `EmbeddingProvider` protocol
 - Implemented a Sentence Transformer embedding adapter with batch document embedding and query embedding
 - Added deterministic embedding-provider tests using a fake model
-- Reached a verified baseline of 55 passing tests
+- Completed the in-memory slide indexing pipeline from `SlideTextRecord` to `IndexedChunk`
+- Added deterministic tests for slide indexing, blank-slide filtering, vector-count validation, metadata preservation, and citation preservation
+- Added an in-memory cosine-similarity retrieval layer over indexed slide chunks
+- Added deterministic retrieval tests for ranking, `top_k`, invalid inputs, query-only embedding, and citation metadata preservation
+- Added `scripts/search_slides.py` as a thin CLI semantic search demo over extracted Google Slides
+- Created a synthetic native Google Slides test deck in the configured Drive folder for retrieval checks
+- Verified the CLI can return ranked, cited slide results for natural-language queries
+- Reached a verified baseline of 75 passing tests
 
 # Current Work
-- Complete the in-memory slide indexing pipeline that pairs normalized slide text with embeddings, stable IDs, and source citations
-- Correct the remaining slide-index import, whitespace filtering, source-field mapping, citation-helper call, and aware-datetime validation issues
-- Add deterministic tests for the complete slide-to-index transformation
+- Expand the CLI search path from the first discovered presentation to all Google Slides presentations in the configured Drive folder
+- Keep scripts thin: orchestration belongs in scripts, while extraction, indexing, retrieval, and storage logic belong in reusable modules
+- Begin planning persistent vector storage so normal searches can load existing embeddings instead of re-indexing every slide each run
 
 # Next
-- Verify that vector counts always match prepared slide records before pairing them
-- Confirm empty and image-only slides are excluded from the embedding batch
-- Run extracted Slides through the in-memory indexing pipeline with the local Sentence Transformer provider
-- Add in-memory cosine-similarity retrieval over indexed slide chunks
+- Search all Google Slides presentations in the configured Drive folder and merge their extracted slide records before indexing
+- Add a small `VectorStore` abstraction so retrieval code is not tightly coupled to one database implementation
+- Add Chroma as the first local persistent vector database
+- Create a sync/index command that extracts slides, embeds changed content, and upserts records into the local vector store
+- Create a saved-index search command that embeds only the query and searches the persisted vectors
+- Store embedding model and indexing metadata so incompatible vectors are not mixed silently
 - Evaluate whether slide-only retrieval needs adjacent-slide context expansion
-- Keep the initial extraction/indexing MVP text-only; defer image counting, OCR, vision descriptions, and multimodal embeddings until slide text retrieval works end to end
+- After persistent retrieval works, add grounded LLM answer generation over the retrieved evidence
+- Keep the initial MVP text-only; defer image counting, OCR, vision descriptions, and multimodal embeddings until slide text retrieval and grounded generation work end to end
 
 # Decisions
 - Start with plain Python before RAG frameworks
@@ -72,6 +82,12 @@ Milestone 3 — Lab Data Extracted
 - Construct exact-slide citation URLs from trusted source metadata rather than asking an LLM to invent them
 - Keep embedding providers replaceable behind a shared document/query embedding contract
 - Keep format-specific index adapters for Slides, Docs, and PDFs while emitting a shared indexed representation
+- Use in-memory cosine similarity as the first exact K-nearest-neighbor retrieval implementation
+- Treat `top_k` as the number of nearest chunks to return, not as an LLM setting
+- Use a vector database for persistence soon; Chroma is the preferred first implementation because it stores vectors, documents, and metadata together locally
+- Continue creating embeddings through LabLens providers and pass explicit vectors into the vector database
+- Keep LLM answer generation separate from retrieval; add summarization only after retrieval quality is visible and debuggable
+- Delay agent orchestration until there are multiple mature retrieval tools such as semantic search, keyword search, metadata filters, and neighbor expansion
 - Defer experiment photo understanding for now: future OCR may extract visible labels/text, and future vision models may create derived image descriptions, but those outputs must remain source-linked and clearly labeled as derived rather than original lab observations
 - Generate document embeddings during indexing and persist them locally across runs
 - Embed only the new question during normal query execution
