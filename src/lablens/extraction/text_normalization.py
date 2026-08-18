@@ -13,7 +13,6 @@ def normalize_text(raw_text: str) -> str:
         str: The normalized text.
     """
     import re
-    import string
     normalized = raw_text.replace("\r\n", "\n").replace("\r", "\n")
     normalized = normalized.strip()
 
