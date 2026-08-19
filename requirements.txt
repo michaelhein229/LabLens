@@ -12,3 +12,6 @@ pytest>=9.1,<10
 
 # Models
 pydantic>=2,<3
+
+# ChromaDB
+chromadb>=1.5,<2
