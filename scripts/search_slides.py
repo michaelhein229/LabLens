@@ -18,16 +18,26 @@ def main():
     parser = argparse.ArgumentParser(
         description="Search indexed Google Slides with a semantic query."
     )
-    parser.add_argument("query", type=str)
+    parser.add_argument("query", nargs="?")
     parser.add_argument("--top-k", type=int, default=5) 
     args = parser.parse_args()
-    query = args.query  
+    query = args.query if args.query is not None else input("Query: ")
+    query = query.strip()
     top_k = args.top_k
+
+    if not query:
+        raise ValueError("Query must not be blank")
+
+    if top_k <= 0:
+        raise ValueError("top_k must be greater than zero")
     # 2. Load .env
     load_dotenv()
     # 3. Get LABLENS_DRIVE_FOLDER_ID
 
     folder_id = os.getenv("LABLENS_DRIVE_FOLDER_ID")
+
+    if not folder_id:
+        raise ValueError("LABLENS_DRIVE_FOLDER_ID is not configured")
     # 4. Authenticate with Google
     credentials = get_google_credentials()
 
@@ -38,25 +48,27 @@ def main():
     files = list_folder_files(drive_service, folder_id)
     print(f"Found {len(files)} files in Drive folder.")
     # 7. Keep only Google Slides presentations
-    presentation_file = next(
-        (file for file in files if classify_drive_file(file) == "presentation"),
-        None,
-    )
+    presentation_files = [
+    file for file in files if classify_drive_file(file) == "presentation"
+    ]
 
-    if presentation_file is None:
+    if not presentation_files:
         print("No Google Slides presentations found.")
         return
-
-    print(f"Extracting: {presentation_file.file_name}")
     
     # 8. Extract SlideTextRecord objects from each presentation
-    records = extract_google_slides(slides_service, presentation_file)
+    all_records = []
+    for record in presentation_files:
+        all_records.extend(extract_google_slides(slides_service, record))
     
     # 9. Create SentenceTransformer model/provider
     model = SentenceTransformer("all-MiniLM-L6-v2")
     provider = SentenceTransformerEmbeddingProvider(model)
     # 10. Index slide records into IndexedChunk objects
-    chunks = index_slide_record(records, provider)
+    chunks = index_slide_record(all_records, provider)
+    if not chunks:
+        print("No searchable slide text found.")
+        return
     # 11. Search indexed chunks with the query
     results = search_indexed_chunks(
         query=query,
@@ -64,7 +76,11 @@ def main():
         provider=provider,
         top_k=top_k
     )
-    # 12. Print ranked results
+
+    if not results:
+        print("No results found.")
+        return
+
     for index, result in enumerate(results, start=1):
         chunk = result.chunk
         print(f"\n{index}. {chunk.source_title} - Slide {chunk.source_position}")
