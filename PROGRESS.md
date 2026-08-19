@@ -47,17 +47,18 @@ Milestone 4 - Semantic Search
 - Added an in-memory cosine-similarity retrieval layer over indexed slide chunks
 - Added deterministic retrieval tests for ranking, `top_k`, invalid inputs, query-only embedding, and citation metadata preservation
 - Added `scripts/search_slides.py` as a thin CLI semantic search demo over extracted Google Slides
-- Created a synthetic native Google Slides test deck in the configured Drive folder for retrieval checks
+- Created a synthetic PowerPoint test deck and imported it as native Google Slides in the configured Drive folder for retrieval checks
 - Verified the CLI can return ranked, cited slide results for natural-language queries
 - Reached a verified baseline of 75 passing tests
 
 # Current Work
 - Expand the CLI search path from the first discovered presentation to all Google Slides presentations in the configured Drive folder
+- Validate the configured folder ID, reject blank queries and invalid `top_k` values before external work, and prompt for a query when none is supplied
+- Add deterministic CLI orchestration tests for presentation selection, missing configuration, argument validation, empty results, and ranked output
 - Keep scripts thin: orchestration belongs in scripts, while extraction, indexing, retrieval, and storage logic belong in reusable modules
-- Begin planning persistent vector storage so normal searches can load existing embeddings instead of re-indexing every slide each run
 
 # Next
-- Search all Google Slides presentations in the configured Drive folder and merge their extracted slide records before indexing
+- Run the hardened all-presentations CLI against the synthetic Drive corpus and inspect relevance and exact-slide citations
 - Add a small `VectorStore` abstraction so retrieval code is not tightly coupled to one database implementation
 - Add Chroma as the first local persistent vector database
 - Create a sync/index command that extracts slides, embeds changed content, and upserts records into the local vector store

@@ -25,7 +25,7 @@ The purpose of this project is also educational. I want to **learn how RAG and a
 
 # Current Implementation Snapshot
 
-Updated 2026-08-18.
+Updated 2026-08-19.
 
 LabLens is entering Milestone 4, Semantic Search. Google Slides extraction, slide indexing, in-memory semantic retrieval, and a first CLI search path are working. The current focus is broadening search from one presentation to all Google Slides presentations in the configured Drive folder, then adding persistent vector storage.
 
@@ -46,7 +46,7 @@ Current working code can:
 * Run exact in-memory K-nearest-neighbor retrieval using cosine similarity.
 * Return ranked `SearchResult` objects that preserve chunk text, score, source metadata, and citation URLs.
 * Query a Google Slides presentation from the command line through `scripts/search_slides.py`.
-* Use a synthetic native Google Slides test deck to verify expected semantic retrieval behavior without private lab data.
+* Use a synthetic PowerPoint test deck imported as native Google Slides to verify expected semantic retrieval behavior without private lab data.
 
 Current test status:
 
@@ -75,7 +75,7 @@ tests/retrieval/                              Retrieval ranking and citation tes
 Current next task:
 
 ```text
-Search all Google Slides presentations in the configured Drive folder, then introduce a Chroma-backed persistent vector index so normal queries do not re-embed every slide.
+Complete and test the CLI path across all Google Slides presentations, including early configuration and input validation. Then introduce a Chroma-backed persistent vector index so normal queries do not re-embed every slide.
 ```
 
 MVP scope note:

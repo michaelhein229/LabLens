@@ -19,7 +19,7 @@ Working features include:
 - In-memory transformation from `SlideTextRecord` objects to embedded `IndexedChunk` objects
 - In-memory cosine-similarity retrieval over indexed slide chunks
 - A CLI semantic search script for querying extracted Google Slides and printing cited results
-- A synthetic native Google Slides test deck for checking expected retrieval behavior
+- A synthetic PowerPoint test deck that can be imported and converted to native Google Slides for retrieval checks
 - Deterministic unit tests using fake Drive, Slides, and embedding-model responses
 
 The first end-to-end semantic search path works in memory. The current direction is to search all Google Slides presentations in the configured Drive folder, then add persistent vector storage so slide embeddings do not need to be regenerated for every query.
@@ -42,11 +42,11 @@ Stable chunk ID + exact slide citation
 Embedding provider
     ↓
 IndexedChunk
-    â†“
+    ↓
 Query embedding
-    â†“
+    ↓
 In-memory cosine retrieval
-    â†“
+    ↓
 Ranked cited slide results
 ```
 
@@ -60,6 +60,8 @@ Create a virtual environment and install dependencies:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
+
+Virtual environments contain platform-specific native packages and should be recreated on each computer rather than copied or synchronized between devices. On Apple Silicon, use `arch -arm64 python3 -m venv .venv` when you need to force a native ARM environment.
 
 Local Google configuration requires:
 
@@ -87,13 +89,22 @@ Current verified baseline:
 
 ## CLI search
 
-Run semantic search from the project root with the `src` package path enabled:
+Run semantic search from the project root with the `src` package path enabled.
 
-```powershell
-$env:PYTHONPATH="src"; .venv\Scripts\python.exe scripts\search_slides.py "high burst release"
+macOS or Linux:
+
+```bash
+PYTHONPATH=src .venv/bin/python scripts/search_slides.py \
+  "high burst release" --top-k 5
 ```
 
-The current CLI loads the configured Drive folder, extracts a Google Slides presentation, embeds slide text with `all-MiniLM-L6-v2`, searches with cosine similarity, and prints ranked slide results with citation URLs. It is still an in-memory demo: the index is rebuilt each run.
+Windows PowerShell:
+
+```powershell
+$env:PYTHONPATH="src"; .venv\Scripts\python.exe scripts\search_slides.py "high burst release" --top-k 5
+```
+
+The current CLI loads the configured Drive folder, extracts the first discovered Google Slides presentation, embeds slide text with `all-MiniLM-L6-v2`, searches with cosine similarity, and prints ranked slide results with citation URLs. It is still an in-memory demo: the query is currently a required positional argument, only one presentation is searched, and the index is rebuilt each run.
 
 ## Project structure
 
