@@ -49,18 +49,24 @@ Milestone 4 - Semantic Search
 - Added `scripts/search_slides.py` as a thin CLI semantic search demo over extracted Google Slides
 - Created a synthetic PowerPoint test deck and imported it as native Google Slides in the configured Drive folder for retrieval checks
 - Verified the CLI can return ranked, cited slide results for natural-language queries
-- Reached a verified baseline of 75 passing tests
+- Expanded CLI search from the first discovered presentation to every direct-child Google Slides presentation
+- Added optional interactive query input and early validation for blank queries, invalid `top_k`, and missing Drive configuration
+- Added deterministic CLI orchestration tests for multi-presentation extraction, unsupported files, empty inputs and results, validation, model construction, ranking, and citations
+- Defined a provider-neutral `VectorStore` protocol for explicit vector upsert and search
+- Implemented an in-memory vector store keyed by stable `chunk_id` values
+- Added atomic batch dimension validation so rejected upserts do not partially mutate storage
+- Added stable-ID replacement, multi-upsert accumulation, cosine ranking, `top_k`, query-dimension validation, and metadata preservation
+- Added 14 deterministic in-memory vector-store contract tests
+- Reached a verified baseline of 100 passing tests
 
 # Current Work
-- Expand the CLI search path from the first discovered presentation to all Google Slides presentations in the configured Drive folder
-- Validate the configured folder ID, reject blank queries and invalid `top_k` values before external work, and prompt for a query when none is supplied
-- Add deterministic CLI orchestration tests for presentation selection, missing configuration, argument validation, empty results, and ranked output
-- Keep scripts thin: orchestration belongs in scripts, while extraction, indexing, retrieval, and storage logic belong in reusable modules
+- Add Chroma as the first local persistent vector database
+- Implement a `ChromaVectorStore` with the same upsert, replacement, search, validation, metadata, and score conventions as the in-memory reference store
+- Continue creating embeddings through LabLens providers and pass explicit vectors into Chroma
+- Add isolated persistence tests that reopen a temporary Chroma database and retrieve previously stored chunks
 
 # Next
-- Run the hardened all-presentations CLI against the synthetic Drive corpus and inspect relevance and exact-slide citations
-- Add a small `VectorStore` abstraction so retrieval code is not tightly coupled to one database implementation
-- Add Chroma as the first local persistent vector database
+- Run the updated all-presentations CLI against the synthetic Drive corpus and inspect relevance and exact-slide citations
 - Create a sync/index command that extracts slides, embeds changed content, and upserts records into the local vector store
 - Create a saved-index search command that embeds only the query and searches the persisted vectors
 - Store embedding model and indexing metadata so incompatible vectors are not mixed silently

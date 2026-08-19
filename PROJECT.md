@@ -27,7 +27,7 @@ The purpose of this project is also educational. I want to **learn how RAG and a
 
 Updated 2026-08-19.
 
-LabLens is entering Milestone 4, Semantic Search. Google Slides extraction, slide indexing, in-memory semantic retrieval, and a first CLI search path are working. The current focus is broadening search from one presentation to all Google Slides presentations in the configured Drive folder, then adding persistent vector storage.
+LabLens is in Milestone 4, Semantic Search. Google Slides extraction, slide indexing, in-memory semantic retrieval, an all-presentations CLI search path, and a provider-neutral vector-store contract with an in-memory reference implementation are working. The current focus is implementing the same storage contract with persistent Chroma storage.
 
 Current working code can:
 
@@ -45,13 +45,17 @@ Current working code can:
 * Transform `SlideTextRecord` objects into embedded, source-linked `IndexedChunk` objects.
 * Run exact in-memory K-nearest-neighbor retrieval using cosine similarity.
 * Return ranked `SearchResult` objects that preserve chunk text, score, source metadata, and citation URLs.
-* Query a Google Slides presentation from the command line through `scripts/search_slides.py`.
+* Query every direct-child Google Slides presentation from the command line through `scripts/search_slides.py`.
+* Accept a positional query or prompt interactively when it is omitted.
+* Reject blank queries, invalid `top_k` values, and missing Drive configuration before external work.
+* Upsert and replace embedded chunks by stable ID through a provider-neutral `VectorStore` protocol.
+* Search an in-memory vector store with atomic dimension validation, cosine ranking, `top_k`, and preserved citation metadata.
 * Use a synthetic PowerPoint test deck imported as native Google Slides to verify expected semantic retrieval behavior without private lab data.
 
 Current test status:
 
 ```text
-75 passing tests
+100 passing tests
 ```
 
 Important current files:
@@ -67,15 +71,19 @@ src/lablens/indexing/embeddings.py            Replaceable embedding-provider bou
 src/lablens/indexing/slides.py                Slide record to indexed chunk assembly
 src/lablens/retrieval/models.py               Retrieval result models
 src/lablens/retrieval/slides.py               In-memory slide retrieval and cosine similarity
+src/lablens/storage/vector_store.py            Provider-neutral vector-store protocol
+src/lablens/storage/in_memory.py               In-memory reference vector store
 scripts/search_slides.py                      CLI semantic search demo
 tests/indexing/                               Index metadata and embedding adapter tests
 tests/retrieval/                              Retrieval ranking and citation tests
+tests/scripts/                                CLI orchestration and validation tests
+tests/storage/                                Vector-store behavior and contract tests
 ```
 
 Current next task:
 
 ```text
-Complete and test the CLI path across all Google Slides presentations, including early configuration and input validation. Then introduce a Chroma-backed persistent vector index so normal queries do not re-embed every slide.
+Implement the `VectorStore` contract with Chroma and verify that embedded chunks persist across store instances and application runs without allowing Chroma to generate embeddings implicitly.
 ```
 
 MVP scope note:
