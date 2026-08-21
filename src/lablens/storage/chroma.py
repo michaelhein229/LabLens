@@ -3,6 +3,7 @@ from chromadb.errors import InvalidArgumentError
 
 from lablens.indexing.models import IndexedChunk
 from lablens.retrieval.models import SearchResult
+from lablens.indexing.config import expected_metadata
 
 
 class ChromaVectorStore:
@@ -16,7 +17,17 @@ class ChromaVectorStore:
             name=collection_name,
             configuration={"hnsw": {"space": "cosine"}},
             embedding_function=None,
+            metadata=expected_metadata
         )
+
+        actual_metadata = self._collection.metadata or {}
+
+        for key, expected_value in expected_metadata.items():
+            if actual_metadata.get(key) != expected_value:
+                raise ValueError(
+                    "Index metadata does not match the current configuration. "
+                    "Rebuild the index before continuing."
+                )
 
     def upsert(self, chunks: list[IndexedChunk]) -> None:
         if not chunks:
