@@ -18,43 +18,28 @@ Working features include:
 - A replaceable embedding-provider contract and Sentence Transformer adapter
 - In-memory transformation from `SlideTextRecord` objects to embedded `IndexedChunk` objects
 - In-memory cosine-similarity retrieval over indexed slide chunks
-- A CLI semantic search script that searches every direct-child Google Slides presentation and prints cited results
-- Optional interactive query input with early validation for blank queries, invalid `top_k`, and missing Drive configuration
+- A saved-index CLI search command that embeds one positional or interactive query and prints cited Chroma results
+- Early validation for blank queries, invalid `top_k`, and missing Drive configuration during indexing
 - A provider-neutral `VectorStore` protocol that accepts explicit document and query vectors
 - An in-memory vector-store reference implementation with atomic upsert, stable-ID replacement, dimension validation, and ranked cosine search
 - A persistent local `ChromaVectorStore` with cosine search, metadata reconstruction, dimension validation, and stable-ID replacement
 - A dedicated indexing CLI that extracts every direct-child Slides presentation, embeds searchable slides, and upserts them into local Chroma storage
+- A lightweight search CLI that opens the saved collection without Google authentication, extraction, or document embedding
 - A synthetic PowerPoint test deck that can be imported and converted to native Google Slides for retrieval checks
 - Deterministic unit, storage-contract, and CLI orchestration tests using fake Drive, Slides, and embedding-model responses
 
-The document side of persistent retrieval now works: Google Slides can be extracted, embedded, and stored in a local Chroma index that survives application restarts. The existing search CLI still rebuilds an in-memory index, so the current task is to change it to embed only the user's query and search the saved Chroma collection.
+Persistent semantic retrieval now works on both sides: the indexing command extracts, embeds, and stores Google Slides in local Chroma, while the search command embeds only the new question and retrieves source-linked chunks from that saved collection. The current task is to run both commands against the synthetic Drive corpus and inspect persistence, relevance, and exact-slide citations end to end.
 
 ## Current pipeline
 
 ```text
-Google Drive
-    ↓
-File discovery and MIME routing
-    ↓
-Google Slides extraction
-    ↓
-SlideTextRecord (one slide = one MVP chunk)
-    ↓
-Text normalization
-    ↓
-Stable chunk ID + exact slide citation
-    ↓
-Embedding provider
-    ↓
-IndexedChunk
-    ↓
-Persistent Chroma collection
-    ↓
-Query embedding
-    ↓
-Cosine K-nearest-neighbor retrieval
-    ↓
-Ranked cited slide results
+Indexing:
+Google Drive → Slides extraction → normalization → document embeddings
+             → IndexedChunk → persistent Chroma collection
+
+Searching:
+User question → one query embedding → saved Chroma collection
+              → cosine KNN → ranked cited slide results
 ```
 
 The original extracted text remains unchanged. Normalized text is used for embeddings and retrieval, while raw text and source metadata remain available for provenance and debugging.
@@ -91,7 +76,7 @@ PYTHONPATH=src .venv/bin/python -m pytest -q
 Current verified baseline:
 
 ```text
-117 passing tests
+115 passing tests
 ```
 
 ## CLI indexing
@@ -129,7 +114,7 @@ Windows PowerShell:
 $env:PYTHONPATH="src"; .venv\Scripts\python.exe scripts\search_slides.py "high burst release" --top-k 5
 ```
 
-The search CLI accepts a positional query or prompts interactively when one is omitted. It validates inputs before authentication, extracts every direct-child Google Slides presentation, embeds slide text with `all-MiniLM-L6-v2`, searches with cosine similarity, and prints ranked slide results with citation URLs. It still uses the earlier in-memory path and rebuilds the index each run; converting it to query the saved Chroma index is the next task.
+The search CLI accepts a positional query or prompts interactively when one is omitted. It validates the query and `top_k`, embeds only the question with `all-MiniLM-L6-v2`, opens the saved Chroma collection, and prints ranked slide results with citation URLs. It does not authenticate with Google, extract slides, or regenerate document embeddings. Use `--persist-path` and `--collection-name` when searching a non-default index.
 
 ## Project structure
 

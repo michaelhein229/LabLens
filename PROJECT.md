@@ -27,7 +27,7 @@ The purpose of this project is also educational. I want to **learn how RAG and a
 
 Updated 2026-08-21.
 
-LabLens is in Milestone 4, Semantic Search. Google Slides extraction, slide indexing, in-memory semantic retrieval, an all-presentations CLI search path, a provider-neutral vector-store contract, and persistent local Chroma storage are working. A dedicated indexing command now writes embedded slide chunks to disk. The current focus is converting normal searches to embed only the query and retrieve from that saved index.
+LabLens is in Milestone 4, Semantic Search. Google Slides extraction, slide indexing, in-memory reference retrieval, a provider-neutral vector-store contract, persistent local Chroma storage, and separate indexing and saved-index search commands are working. Normal searches now embed only the question and retrieve from the saved collection. The current focus is validating the persistent pipeline end to end against the synthetic Drive corpus.
 
 Current working code can:
 
@@ -45,20 +45,21 @@ Current working code can:
 * Transform `SlideTextRecord` objects into embedded, source-linked `IndexedChunk` objects.
 * Run exact in-memory K-nearest-neighbor retrieval using cosine similarity.
 * Return ranked `SearchResult` objects that preserve chunk text, score, source metadata, and citation URLs.
-* Query every direct-child Google Slides presentation from the command line through `scripts/search_slides.py`.
+* Search saved slide embeddings from the command line through `scripts/search_slides.py`.
 * Accept a positional query or prompt interactively when it is omitted.
-* Reject blank queries, invalid `top_k` values, and missing Drive configuration before external work.
+* Reject blank queries and invalid `top_k` values before model or store construction, and reject missing Drive configuration before indexing authentication.
 * Upsert and replace embedded chunks by stable ID through a provider-neutral `VectorStore` protocol.
 * Search an in-memory vector store with atomic dimension validation, cosine ranking, `top_k`, and preserved citation metadata.
 * Persist embedded chunks with `ChromaVectorStore` while preserving the same validation, score, replacement, and result-model conventions.
 * Reopen a local Chroma database and retrieve stored chunks with their source metadata and citation URLs intact.
 * Build or update the persistent slide index through `scripts/index_slides.py` with configurable persistence path and collection name.
+* Embed only the new question and query the saved collection through `scripts/search_slides.py` without Drive access, extraction, or document embedding.
 * Use a synthetic PowerPoint test deck imported as native Google Slides to verify expected semantic retrieval behavior without private lab data.
 
 Current test status:
 
 ```text
-117 passing tests
+115 passing tests
 ```
 
 Important current files:
@@ -78,7 +79,7 @@ src/lablens/storage/vector_store.py            Provider-neutral vector-store pro
 src/lablens/storage/in_memory.py               In-memory reference vector store
 src/lablens/storage/chroma.py                  Persistent local Chroma vector store
 scripts/index_slides.py                        Persistent Slides indexing command
-scripts/search_slides.py                      CLI semantic search demo
+scripts/search_slides.py                      Persistent saved-index search command
 tests/indexing/                               Index metadata and embedding adapter tests
 tests/retrieval/                              Retrieval ranking and citation tests
 tests/scripts/                                CLI orchestration and validation tests
@@ -88,7 +89,7 @@ tests/storage/                                Vector-store behavior and contract
 Current next task:
 
 ```text
-Convert `scripts/search_slides.py` to open the saved Chroma collection, embed only the user's query, return ranked `SearchResult` objects, and print exact-slide citations without contacting Google Drive or regenerating document embeddings.
+Run `scripts/index_slides.py` and `scripts/search_slides.py` against the synthetic Drive corpus, verify that repeated indexing does not duplicate stable chunk IDs, and inspect retrieval relevance and exact-slide citations.
 ```
 
 MVP scope note:

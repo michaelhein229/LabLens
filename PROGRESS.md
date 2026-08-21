@@ -65,17 +65,20 @@ Milestone 4 - Semantic Search
 - Added `scripts/index_slides.py` to extract, embed, and upsert all direct-child Google Slides presentations into persistent Chroma storage
 - Added CLI options for the persistence path and collection name and excluded the generated `data/chroma/` database from Git
 - Added five deterministic indexing-command orchestration tests without accessing Google, loading a real embedding model, or writing a real Chroma database
-- Reached a verified baseline of 117 passing tests
+- Reached a verified baseline of 117 passing tests before replacing the obsolete in-memory search CLI tests
+- Converted `scripts/search_slides.py` to open the saved Chroma collection and embed only the user's query
+- Removed Google authentication, Drive discovery, slide extraction, document indexing, and document embedding from normal search execution
+- Preserved positional and interactive query input, `top_k` validation, ranked output, and exact-slide citations
+- Replaced the old Drive-oriented search tests with nine saved-index orchestration tests covering query-only embedding, Chroma configuration, validation, empty results, scores, and citations
+- Reached a verified baseline of 115 passing tests after the focused search-test rewrite
 
 # Current Work
-- Convert `scripts/search_slides.py` from rebuilding an in-memory index to searching the saved Chroma collection
-- Load the same Sentence Transformer model but embed only the user's query during normal searches
-- Keep saved-index search independent of Google Drive authentication, extraction, and document embedding
-- Add deterministic CLI tests that verify query-only embedding, Chroma configuration, ranked output, and citations
+- Run `scripts/index_slides.py` against the synthetic Drive corpus
+- Verify that the saved collection survives process restarts and repeated indexing does not duplicate stable chunk IDs
+- Run multiple saved-index queries and inspect relevance, score ordering, and exact-slide citations
+- Record any retrieval failures before moving from Milestone 4 to grounded answer generation
 
 # Next
-- Run `scripts/index_slides.py` against the synthetic Drive corpus and verify that the local record count remains stable across repeated upserts
-- Run saved-index search against that corpus and inspect relevance and exact-slide citations
 - Store embedding model and indexing metadata so incompatible vectors are not mixed silently
 - Add incremental synchronization that skips unchanged files and removes stale chunks
 - Evaluate whether slide-only retrieval needs adjacent-slide context expansion
