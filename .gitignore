@@ -7,3 +7,4 @@ credentials.json
 token.json
 secrets/
 .DS_Store
+data/chroma/

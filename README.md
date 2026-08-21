@@ -4,7 +4,7 @@ LabLens is an educational, source-grounded RAG research assistant for laboratory
 
 ## Current status
 
-LabLens is entering Milestone 4: Semantic Search.
+LabLens is in Milestone 4: Semantic Search.
 
 Working features include:
 
@@ -22,10 +22,12 @@ Working features include:
 - Optional interactive query input with early validation for blank queries, invalid `top_k`, and missing Drive configuration
 - A provider-neutral `VectorStore` protocol that accepts explicit document and query vectors
 - An in-memory vector-store reference implementation with atomic upsert, stable-ID replacement, dimension validation, and ranked cosine search
+- A persistent local `ChromaVectorStore` with cosine search, metadata reconstruction, dimension validation, and stable-ID replacement
+- A dedicated indexing CLI that extracts every direct-child Slides presentation, embeds searchable slides, and upserts them into local Chroma storage
 - A synthetic PowerPoint test deck that can be imported and converted to native Google Slides for retrieval checks
 - Deterministic unit, storage-contract, and CLI orchestration tests using fake Drive, Slides, and embedding-model responses
 
-The end-to-end semantic search path now works in memory across all Google Slides presentations in the configured Drive folder. The vector-store contract and its in-memory reference implementation are complete. The current direction is to implement the same contract with persistent Chroma storage so normal searches will not need to regenerate every slide embedding.
+The document side of persistent retrieval now works: Google Slides can be extracted, embedded, and stored in a local Chroma index that survives application restarts. The existing search CLI still rebuilds an in-memory index, so the current task is to change it to embed only the user's query and search the saved Chroma collection.
 
 ## Current pipeline
 
@@ -46,9 +48,11 @@ Embedding provider
     ↓
 IndexedChunk
     ↓
+Persistent Chroma collection
+    ↓
 Query embedding
     ↓
-In-memory cosine retrieval
+Cosine K-nearest-neighbor retrieval
     ↓
 Ranked cited slide results
 ```
@@ -87,8 +91,26 @@ PYTHONPATH=src .venv/bin/python -m pytest -q
 Current verified baseline:
 
 ```text
-100 passing tests
+117 passing tests
 ```
+
+## CLI indexing
+
+Build or update the persistent local slide index from the project root:
+
+macOS or Linux:
+
+```bash
+PYTHONPATH=src .venv/bin/python scripts/index_slides.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PYTHONPATH="src"; .venv\Scripts\python.exe scripts\index_slides.py
+```
+
+The command defaults to the `data/chroma` persistence directory and the `lablens-slides` collection. Override them with `--persist-path` and `--collection-name`. It discovers every direct-child Google Slides presentation, extracts and embeds searchable slide text, and upserts the resulting chunks by stable ID. The generated `data/chroma/` database is local data and is excluded from Git.
 
 ## CLI search
 
@@ -107,7 +129,7 @@ Windows PowerShell:
 $env:PYTHONPATH="src"; .venv\Scripts\python.exe scripts\search_slides.py "high burst release" --top-k 5
 ```
 
-The CLI accepts a positional query or prompts interactively when one is omitted. It validates inputs before authentication, extracts every direct-child Google Slides presentation, embeds slide text with `all-MiniLM-L6-v2`, searches with cosine similarity, and prints ranked slide results with citation URLs. It is still an in-memory implementation, so the index is rebuilt each run.
+The search CLI accepts a positional query or prompts interactively when one is omitted. It validates inputs before authentication, extracts every direct-child Google Slides presentation, embeds slide text with `all-MiniLM-L6-v2`, searches with cosine similarity, and prints ranked slide results with citation URLs. It still uses the earlier in-memory path and rebuilds the index each run; converting it to query the saved Chroma index is the next task.
 
 ## Project structure
 
@@ -117,7 +139,7 @@ src/lablens/extraction/    Slides, Docs, PDF extraction, routing, normalization
 src/lablens/indexing/      Chunk metadata, embedding providers, index assembly
 src/lablens/models/        Shared validated source models
 src/lablens/retrieval/     Similarity search and retrieval result models
-src/lablens/storage/       Vector-store contract and in-memory reference store
+src/lablens/storage/       Vector-store contract, in-memory reference, and Chroma store
 scripts/                   Local learning and integration scripts
 tests/                     Deterministic unit tests
 ```

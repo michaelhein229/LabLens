@@ -58,18 +58,26 @@ Milestone 4 - Semantic Search
 - Added stable-ID replacement, multi-upsert accumulation, cosine ranking, `top_k`, query-dimension validation, and metadata preservation
 - Added 14 deterministic in-memory vector-store contract tests
 - Reached a verified baseline of 100 passing tests
+- Added Chroma as the first local persistent vector database
+- Implemented `ChromaVectorStore` with explicit embeddings, cosine KNN search, metadata reconstruction, stable-ID replacement, and dimension validation
+- Added persistent storage tests that reopen a temporary Chroma database and retrieve previously stored chunks
+- Preserved the in-memory store's similarity-score convention by converting Chroma cosine distance with `1 - distance`
+- Added `scripts/index_slides.py` to extract, embed, and upsert all direct-child Google Slides presentations into persistent Chroma storage
+- Added CLI options for the persistence path and collection name and excluded the generated `data/chroma/` database from Git
+- Added five deterministic indexing-command orchestration tests without accessing Google, loading a real embedding model, or writing a real Chroma database
+- Reached a verified baseline of 117 passing tests
 
 # Current Work
-- Add Chroma as the first local persistent vector database
-- Implement a `ChromaVectorStore` with the same upsert, replacement, search, validation, metadata, and score conventions as the in-memory reference store
-- Continue creating embeddings through LabLens providers and pass explicit vectors into Chroma
-- Add isolated persistence tests that reopen a temporary Chroma database and retrieve previously stored chunks
+- Convert `scripts/search_slides.py` from rebuilding an in-memory index to searching the saved Chroma collection
+- Load the same Sentence Transformer model but embed only the user's query during normal searches
+- Keep saved-index search independent of Google Drive authentication, extraction, and document embedding
+- Add deterministic CLI tests that verify query-only embedding, Chroma configuration, ranked output, and citations
 
 # Next
-- Run the updated all-presentations CLI against the synthetic Drive corpus and inspect relevance and exact-slide citations
-- Create a sync/index command that extracts slides, embeds changed content, and upserts records into the local vector store
-- Create a saved-index search command that embeds only the query and searches the persisted vectors
+- Run `scripts/index_slides.py` against the synthetic Drive corpus and verify that the local record count remains stable across repeated upserts
+- Run saved-index search against that corpus and inspect relevance and exact-slide citations
 - Store embedding model and indexing metadata so incompatible vectors are not mixed silently
+- Add incremental synchronization that skips unchanged files and removes stale chunks
 - Evaluate whether slide-only retrieval needs adjacent-slide context expansion
 - After persistent retrieval works, add grounded LLM answer generation over the retrieved evidence
 - Keep the initial MVP text-only; defer image counting, OCR, vision descriptions, and multimodal embeddings until slide text retrieval and grounded generation work end to end
@@ -91,7 +99,7 @@ Milestone 4 - Semantic Search
 - Keep format-specific index adapters for Slides, Docs, and PDFs while emitting a shared indexed representation
 - Use in-memory cosine similarity as the first exact K-nearest-neighbor retrieval implementation
 - Treat `top_k` as the number of nearest chunks to return, not as an LLM setting
-- Use a vector database for persistence soon; Chroma is the preferred first implementation because it stores vectors, documents, and metadata together locally
+- Use Chroma as the first persistent vector database because it stores vectors, documents, and metadata together locally
 - Continue creating embeddings through LabLens providers and pass explicit vectors into the vector database
 - Keep LLM answer generation separate from retrieval; add summarization only after retrieval quality is visible and debuggable
 - Delay agent orchestration until there are multiple mature retrieval tools such as semantic search, keyword search, metadata filters, and neighbor expansion
